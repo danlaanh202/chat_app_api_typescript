@@ -37,7 +37,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const cors_1 = __importDefault(require("cors"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const routes_1 = __importDefault(require("./src/routes"));
@@ -50,10 +49,9 @@ const server = http.createServer(app);
 const io = new socketio.Server(server);
 dotenv_1.default.config();
 const port = process.env.PORT;
-app.use((0, cors_1.default)());
-app.all("/*", (req, res, next) => {
+app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
 app.use(express_1.default.json());

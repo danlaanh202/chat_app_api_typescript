@@ -41,16 +41,35 @@ class MessageController {
     //     return res.status(500).json(error);
     //   }
     // }
+    sendMessageWithImage(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const newMessage = new Message_1.default({
+                    user: (0, mongooseUtils_1.stringToMongoId)(req.body.user),
+                    room: (0, mongooseUtils_1.stringToMongoId)(req.body.roomId),
+                    image: (0, mongooseUtils_1.stringToMongoId)(req.body.imageId),
+                });
+                const savedMessage = yield newMessage.save();
+                return res.status(200).json(savedMessage);
+            }
+            catch (err) {
+                return res.status(500).json(err);
+            }
+        });
+    }
     getMessageWithPaginate(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                let messages = yield Message_1.default.paginate({
-                    room: (0, mongooseUtils_1.stringToMongoId)(req.query.roomId),
-                }, {
+                const options = {
                     sort: { _id: -1 },
                     page: parseInt(req.query.page) || 1,
                     limit: parseInt(req.query.limit) || 20,
-                });
+                    populate: "image",
+                    lean: true,
+                };
+                let messages = yield Message_1.default.paginate({
+                    room: (0, mongooseUtils_1.stringToMongoId)(req.query.roomId),
+                }, options).then((result) => result);
                 return res.status(200).json(messages);
             }
             catch (error) {

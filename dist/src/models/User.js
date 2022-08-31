@@ -18,5 +18,8 @@ const UserSchema = new mongoose_1.default.Schema({
         type: Boolean,
         default: false,
     },
+    avatar: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+    },
 }, { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } });
 exports.default = mongoose_1.default.model("User", UserSchema);

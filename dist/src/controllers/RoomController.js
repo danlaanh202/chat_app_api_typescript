@@ -50,9 +50,11 @@ class RoomController {
     getMyRooms(req, res) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            const searchText = req.query.search_text;
             try {
                 const rooms = yield Room_1.default.find({
                     users: { $all: (0, mongooseUtils_1.stringToMongoId)((_a = req.query) === null || _a === void 0 ? void 0 : _a._id) },
+                    room_name: { $regex: searchText, $options: "i" },
                 }).sort({ _id: -1 });
                 return res.status(200).json(rooms);
             }

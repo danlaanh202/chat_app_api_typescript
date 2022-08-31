@@ -6,6 +6,7 @@ interface InstitutionData {
   room: mongoose.Types.ObjectId;
   message: String;
   created_at: Date;
+  image: mongoose.Types.ObjectId;
 }
 const MessageSchema = new Schema(
   {
@@ -15,11 +16,14 @@ const MessageSchema = new Schema(
     },
     message: {
       type: String,
-      required: true,
     },
     room: {
       type: Schema.Types.ObjectId,
       ref: "Room",
+    },
+    image: {
+      type: Schema.Types.ObjectId,
+      ref: "Image",
     },
   },
   { timestamps: { createdAt: "created_at" } }

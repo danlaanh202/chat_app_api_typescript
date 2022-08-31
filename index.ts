@@ -1,4 +1,3 @@
-import { IMessage } from "./src/types/index";
 import express, { Express } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -18,8 +17,14 @@ const port = process.env.PORT;
 app.use(cors());
 app.use(express.json());
 
-app.use(bodyParser.json({ limit: "10mb" }));
-app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(
+  bodyParser.urlencoded({
+    limit: "50mb",
+    extended: true,
+    parameterLimit: 50000,
+  })
+);
 mongoose
   .connect(process.env.MONGO_URL as string)
   .then(() => {
@@ -53,6 +58,20 @@ io.on("connection", (socket) => {
       io.sockets.to(roomId).emit("receivemsg", savedMsg);
     } catch (err) {
       console.log(`something happened when saving message`);
+    }
+  });
+  socket.on("sendImg", async ({ img, roomId, userId }) => {
+    //when using to send image
+    try {
+      const newMessage = new Message({
+        user: stringToMongoId(userId),
+        room: stringToMongoId(roomId),
+        image: stringToMongoId(img),
+      });
+      const savedMessage = await (await newMessage.save()).populate("image");
+      io.sockets.to(roomId).emit("receivedImg", savedMessage);
+    } catch (err) {
+      console.log(`something gone wrong`);
     }
   });
   socket.on("disconnect", () => {

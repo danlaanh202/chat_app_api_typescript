@@ -52,8 +52,12 @@ dotenv_1.default.config();
 const port = process.env.PORT;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-app.use(body_parser_1.default.json({ limit: "10mb" }));
-app.use(body_parser_1.default.urlencoded({ limit: "10mb", extended: true }));
+app.use(body_parser_1.default.json({ limit: "50mb" }));
+app.use(body_parser_1.default.urlencoded({
+    limit: "50mb",
+    extended: true,
+    parameterLimit: 50000,
+}));
 mongoose_1.default
     .connect(process.env.MONGO_URL)
     .then(() => {
@@ -84,6 +88,21 @@ io.on("connection", (socket) => {
         }
         catch (err) {
             console.log(`something happened when saving message`);
+        }
+    }));
+    socket.on("sendImg", ({ img, roomId, userId }) => __awaiter(void 0, void 0, void 0, function* () {
+        //when using to send image
+        try {
+            const newMessage = new Message_1.default({
+                user: (0, mongooseUtils_1.stringToMongoId)(userId),
+                room: (0, mongooseUtils_1.stringToMongoId)(roomId),
+                image: (0, mongooseUtils_1.stringToMongoId)(img),
+            });
+            const savedMessage = yield (yield newMessage.save()).populate("image");
+            io.sockets.to(roomId).emit("receivedImg", savedMessage);
+        }
+        catch (err) {
+            console.log(`something gone wrong`);
         }
     }));
     socket.on("disconnect", () => {

@@ -7,4 +7,8 @@ router.get(
   "/get_messages_with_limit",
   MessageController.getMessageWithPaginate
 );
+router.post(
+  "/send_messages_with_image",
+  MessageController.sendMessageWithImage
+);
 export default router;

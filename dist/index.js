@@ -46,7 +46,11 @@ const Message_1 = __importDefault(require("./src/models/Message"));
 const mongooseUtils_1 = require("./utils/mongooseUtils");
 const app = (0, express_1.default)();
 const server = http.createServer(app);
-const io = new socketio.Server(server);
+const io = new socketio.Server(server, {
+    cors: {
+        origin: "*",
+    },
+});
 dotenv_1.default.config();
 const port = process.env.PORT;
 app.use(function (req, res, next) {

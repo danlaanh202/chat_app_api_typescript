@@ -51,6 +51,11 @@ const io = new socketio.Server(server);
 dotenv_1.default.config();
 const port = process.env.PORT;
 app.use((0, cors_1.default)());
+app.all("/*", (req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    next();
+});
 app.use(express_1.default.json());
 app.use(body_parser_1.default.json({ limit: "50mb" }));
 app.use(body_parser_1.default.urlencoded({

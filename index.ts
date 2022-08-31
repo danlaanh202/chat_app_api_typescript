@@ -15,6 +15,11 @@ const io = new socketio.Server(server);
 dotenv.config();
 const port = process.env.PORT;
 app.use(cors());
+app.all("/*", (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  next();
+});
 app.use(express.json());
 
 app.use(bodyParser.json({ limit: "50mb" }));

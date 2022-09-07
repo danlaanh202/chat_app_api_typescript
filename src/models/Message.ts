@@ -7,6 +7,7 @@ interface InstitutionData {
   message: String;
   created_at: Date;
   image: mongoose.Types.ObjectId;
+  isEndPoint?: Boolean;
 }
 const MessageSchema = new Schema(
   {
@@ -24,6 +25,9 @@ const MessageSchema = new Schema(
     image: {
       type: Schema.Types.ObjectId,
       ref: "Image",
+    },
+    isEndPoint: {
+      type: Boolean,
     },
   },
   { timestamps: { createdAt: "created_at" } }

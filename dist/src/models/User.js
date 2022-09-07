@@ -21,5 +21,9 @@ const UserSchema = new mongoose_1.default.Schema({
     avatar: {
         type: mongoose_1.default.Schema.Types.ObjectId,
     },
+    is_active: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } });
 exports.default = mongoose_1.default.model("User", UserSchema);

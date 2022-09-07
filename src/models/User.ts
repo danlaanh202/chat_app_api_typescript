@@ -18,6 +18,10 @@ const UserSchema = new mongoose.Schema(
     avatar: {
       type: mongoose.Schema.Types.ObjectId,
     },
+    is_active: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );

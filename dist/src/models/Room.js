@@ -21,6 +21,10 @@ const RoomSchema = new mongoose_1.Schema({
         ref: "User",
         required: true,
     },
+    last_message: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "Message",
+    },
 }, { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } });
 RoomSchema.plugin(mongoose_paginate_v2_1.default);
 exports.default = (0, mongoose_1.model)("Room", RoomSchema);

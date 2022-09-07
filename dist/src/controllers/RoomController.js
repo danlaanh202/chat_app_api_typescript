@@ -55,7 +55,7 @@ class RoomController {
                 const rooms = yield Room_1.default.find({
                     users: { $all: (0, mongooseUtils_1.stringToMongoId)((_a = req.query) === null || _a === void 0 ? void 0 : _a._id) },
                     room_name: { $regex: searchText, $options: "i" },
-                }).sort({ _id: -1 });
+                }).sort({ updated_at: -1 });
                 return res.status(200).json(rooms);
             }
             catch (error) {

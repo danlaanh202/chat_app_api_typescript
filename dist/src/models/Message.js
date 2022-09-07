@@ -22,6 +22,9 @@ const MessageSchema = new mongoose_1.Schema({
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "Image",
     },
+    isEndPoint: {
+        type: Boolean,
+    },
 }, { timestamps: { createdAt: "created_at" } });
 MessageSchema.plugin(mongoose_paginate_v2_1.default);
 exports.default = mongoose_2.default.model("Message", MessageSchema);

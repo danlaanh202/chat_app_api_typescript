@@ -41,7 +41,8 @@ class RoomController {
       const rooms = await Room.find({
         users: { $all: stringToMongoId(req.query?._id as string) },
         room_name: { $regex: searchText, $options: "i" },
-      }).sort({ _id: -1 });
+      }).sort({ updated_at: -1 });
+
       return res.status(200).json(rooms);
     } catch (error) {
       return res.status(500).json(error);

@@ -25,6 +25,10 @@ const RoomSchema = new Schema(
       ref: "User",
       required: true,
     },
+    last_message: {
+      type: Schema.Types.ObjectId,
+      ref: "Message",
+    },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );

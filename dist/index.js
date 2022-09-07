@@ -44,6 +44,8 @@ const socketio = __importStar(require("socket.io"));
 const http = __importStar(require("http"));
 const Message_1 = __importDefault(require("./src/models/Message"));
 const mongooseUtils_1 = require("./utils/mongooseUtils");
+const User_1 = __importDefault(require("./src/models/User"));
+const Room_1 = __importDefault(require("./src/models/Room"));
 const app = (0, express_1.default)();
 const server = http.createServer(app);
 const io = new socketio.Server(server, {
@@ -55,6 +57,7 @@ dotenv_1.default.config();
 const port = process.env.PORT;
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
@@ -74,12 +77,85 @@ mongoose_1.default
     console.log("SOMETHING HAPPENDED" + err);
 });
 (0, routes_1.default)(app);
+let sockets = [];
 io.on("connection", (socket) => {
     //khi connect đến server thì sẽ cho user đó active
+    sockets.push(socket);
+    let socketUserId;
+    socket.on("active", ({ userId }) => {
+        //khi user login thì sẽ cho active bởi id
+        socketUserId = userId;
+        socket.userId = userId;
+        const updateActive = () => __awaiter(void 0, void 0, void 0, function* () {
+            // const activeMember =
+            yield User_1.default.findByIdAndUpdate(userId, {
+                is_active: true,
+            }, { new: true });
+        });
+        updateActive();
+        socket.on("createRoom", ({ users, isPrivate, room_name, room_host, }) => __awaiter(void 0, void 0, void 0, function* () {
+            const createdRoom = new Room_1.default({
+                users: (0, mongooseUtils_1.stringArraytoMongoId)(users),
+                isPrivate: isPrivate,
+                room_name: room_name,
+                room_host: (0, mongooseUtils_1.stringToMongoId)(room_host),
+            });
+            try {
+                const savedRoom = yield createdRoom.save();
+                //when saved, noti to all users
+                const endPointMessage = new Message_1.default({
+                    user: (0, mongooseUtils_1.stringToMongoId)(room_host),
+                    message: `${room_name} has been created`,
+                    room: savedRoom._id,
+                    isEndPoint: true,
+                });
+                const savedEndPoint = yield endPointMessage.save();
+                const savedAfterUpdateRoom = yield Room_1.default.findByIdAndUpdate(savedRoom._id, {
+                    last_message: savedEndPoint._id,
+                }, { new: true });
+                users.forEach((item) => {
+                    for (let i = 0; i < sockets.length; i++) {
+                        if (sockets[i].userId === item) {
+                            sockets[i].join(savedRoom._id);
+                            break;
+                        }
+                    }
+                });
+                io.sockets
+                    .to(savedRoom._id)
+                    .emit("update_room_create", savedAfterUpdateRoom);
+            }
+            catch (err) {
+                console.log(err);
+            }
+        }));
+        socket.on("add_member_to_room", ({ userIds, roomId }) => __awaiter(void 0, void 0, void 0, function* () {
+            const userIdsArray = (0, mongooseUtils_1.stringArraytoMongoId)(userIds);
+            try {
+                const addToRoom = yield Room_1.default.findByIdAndUpdate(roomId, {
+                    $push: { users: { $each: userIdsArray } },
+                }, { new: true });
+                userIds.forEach((item) => {
+                    for (let i = 0; i < sockets.length; i++) {
+                        if (sockets[i].userId === item) {
+                            if (addToRoom)
+                                sockets[i].join(addToRoom._id);
+                            break;
+                        }
+                    }
+                });
+                if (addToRoom)
+                    io.sockets.to(addToRoom._id).emit("update_room_add", addToRoom);
+            }
+            catch (err) {
+                console.log("error when add members");
+            }
+        }));
+    });
     socket.on("joinRoom", ({ room }) => {
         //sau khi join room thì update lại db
         socket.join(room);
-        console.log(socket.id + "Joined " + room);
+        // console.log(socket.id + "Joined " + room);
     });
     socket.on("sendmsg", ({ msg, roomId, userId }) => __awaiter(void 0, void 0, void 0, function* () {
         //gửi msg và lưu vào trong database
@@ -91,6 +167,11 @@ io.on("connection", (socket) => {
         try {
             const savedMsg = yield newMessage.save();
             //saved and emit to realtime socket
+            // console.log(savedMsg);
+            //update last message to room with id below
+            yield Room_1.default.findByIdAndUpdate(roomId, {
+                last_message: savedMsg._id,
+            }, { new: true });
             io.sockets.to(roomId).emit("receivemsg", savedMsg);
         }
         catch (err) {
@@ -113,7 +194,14 @@ io.on("connection", (socket) => {
         }
     }));
     socket.on("disconnect", () => {
-        console.log("user disconnected");
+        sockets.splice(sockets.indexOf(socket), 1);
+        const disconnectUser = () => __awaiter(void 0, void 0, void 0, function* () {
+            yield User_1.default.findByIdAndUpdate(socketUserId, {
+                is_active: false,
+            }, { new: true });
+        });
+        console.log(`${socket.userId} disconnected`);
+        disconnectUser();
     });
 });
 server.listen(port, () => {

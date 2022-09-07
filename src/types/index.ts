@@ -1,4 +1,5 @@
 import { ObjectId, Types } from "mongoose";
+import { Socket } from "socket.io";
 
 //socket.io
 interface ServerToClientEvents {
@@ -31,4 +32,14 @@ export interface IUser {
   password: string;
   email: string;
   isAdmin: Boolean;
+  avatar?: Types.ObjectId;
+}
+export interface IObject {
+  id?: string;
+}
+export interface IAssociativeArray {
+  [key: string]: string | boolean | number | object | IObject;
+}
+export interface IExtendedSocket extends Socket {
+  userId?: string;
 }

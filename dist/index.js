@@ -112,7 +112,12 @@ io.on("connection", (socket) => {
                 const savedEndPoint = yield endPointMessage.save();
                 const savedAfterUpdateRoom = yield Room_1.default.findByIdAndUpdate(savedRoom._id, {
                     last_message: savedEndPoint._id,
-                }, { new: true });
+                }, { new: true }).populate({
+                    path: "last_message",
+                    populate: {
+                        path: "user",
+                    },
+                });
                 users.forEach((item) => {
                     for (let i = 0; i < sockets.length; i++) {
                         if (sockets[i].userId === item) {
@@ -134,7 +139,12 @@ io.on("connection", (socket) => {
             try {
                 const addToRoom = yield Room_1.default.findByIdAndUpdate(roomId, {
                     $push: { users: { $each: userIdsArray } },
-                }, { new: true });
+                }, { new: true }).populate({
+                    path: "last_message",
+                    populate: {
+                        path: "user",
+                    },
+                });
                 userIds.forEach((item) => {
                     for (let i = 0; i < sockets.length; i++) {
                         if (sockets[i].userId === item) {
@@ -165,14 +175,20 @@ io.on("connection", (socket) => {
             room: (0, mongooseUtils_1.stringToMongoId)(roomId),
         });
         try {
-            const savedMsg = yield newMessage.save();
+            const savedMsg = yield (yield newMessage.save()).populate("user room");
             //saved and emit to realtime socket
             // console.log(savedMsg);
             //update last message to room with id below
-            yield Room_1.default.findByIdAndUpdate(roomId, {
+            const updatedRoom = yield Room_1.default.findByIdAndUpdate(roomId, {
                 last_message: savedMsg._id,
-            }, { new: true });
-            io.sockets.to(roomId).emit("receivemsg", savedMsg);
+            }, { new: true }).populate({
+                path: "last_message",
+                populate: {
+                    path: "user",
+                },
+            });
+            //after
+            io.sockets.to(roomId).emit("receivemsg", { savedMsg, updatedRoom });
         }
         catch (err) {
             console.log(`something happened when saving message`);
@@ -186,8 +202,16 @@ io.on("connection", (socket) => {
                 room: (0, mongooseUtils_1.stringToMongoId)(roomId),
                 image: (0, mongooseUtils_1.stringToMongoId)(img),
             });
-            const savedMessage = yield (yield newMessage.save()).populate("image");
-            io.sockets.to(roomId).emit("receivedImg", savedMessage);
+            const savedMessage = yield (yield newMessage.save()).populate("image user room");
+            const updatedRoom = yield Room_1.default.findByIdAndUpdate(roomId, {
+                last_message: savedMessage._id,
+            }, { new: true }).populate({
+                path: "last_message",
+                populate: {
+                    path: "user",
+                },
+            });
+            io.sockets.to(roomId).emit("receivedImg", { savedMessage, updatedRoom });
         }
         catch (err) {
             console.log(`something gone wrong`);

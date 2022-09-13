@@ -64,7 +64,7 @@ class MessageController {
                     sort: { _id: -1 },
                     page: parseInt(req.query.page) || 1,
                     limit: parseInt(req.query.limit) || 20,
-                    populate: "image",
+                    populate: "image user room",
                     lean: true,
                 };
                 let messages = yield Message_1.default.paginate({

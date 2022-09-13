@@ -117,7 +117,12 @@ io.on("connection", (socket: IExtendedSocket) => {
               last_message: savedEndPoint._id,
             },
             { new: true }
-          );
+          ).populate({
+            path: "last_message",
+            populate: {
+              path: "user",
+            },
+          });
           users.forEach((item) => {
             for (let i = 0; i < sockets.length; i++) {
               if (sockets[i].userId === item) {
@@ -147,7 +152,12 @@ io.on("connection", (socket: IExtendedSocket) => {
               $push: { users: { $each: userIdsArray } },
             },
             { new: true }
-          );
+          ).populate({
+            path: "last_message",
+            populate: {
+              path: "user",
+            },
+          });
           userIds.forEach((item) => {
             for (let i = 0; i < sockets.length; i++) {
               if (sockets[i].userId === item) {
@@ -179,18 +189,24 @@ io.on("connection", (socket: IExtendedSocket) => {
       room: stringToMongoId(roomId),
     });
     try {
-      const savedMsg = await newMessage.save();
+      const savedMsg = await (await newMessage.save()).populate("user room");
       //saved and emit to realtime socket
       // console.log(savedMsg);
       //update last message to room with id below
-      await Room.findByIdAndUpdate(
+      const updatedRoom = await Room.findByIdAndUpdate(
         roomId,
         {
           last_message: savedMsg._id,
         },
         { new: true }
-      );
-      io.sockets.to(roomId).emit("receivemsg", savedMsg);
+      ).populate({
+        path: "last_message",
+        populate: {
+          path: "user",
+        },
+      });
+      //after
+      io.sockets.to(roomId).emit("receivemsg", { savedMsg, updatedRoom });
     } catch (err) {
       console.log(`something happened when saving message`);
     }
@@ -203,8 +219,22 @@ io.on("connection", (socket: IExtendedSocket) => {
         room: stringToMongoId(roomId),
         image: stringToMongoId(img),
       });
-      const savedMessage = await (await newMessage.save()).populate("image");
-      io.sockets.to(roomId).emit("receivedImg", savedMessage);
+      const savedMessage = await (
+        await newMessage.save()
+      ).populate("image user room");
+      const updatedRoom = await Room.findByIdAndUpdate(
+        roomId,
+        {
+          last_message: savedMessage._id,
+        },
+        { new: true }
+      ).populate({
+        path: "last_message",
+        populate: {
+          path: "user",
+        },
+      });
+      io.sockets.to(roomId).emit("receivedImg", { savedMessage, updatedRoom });
     } catch (err) {
       console.log(`something gone wrong`);
     }
